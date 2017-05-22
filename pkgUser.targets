@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project  ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- 只有在工具集为V100时才可使用 -->
+    <PropertyGroup>
+        <pkgUserEnabled>false</pkgUserEnabled>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(PlatformToolset)' == 'v100'">
+        <pkgUserEnabled>true</pkgUserEnabled>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <TLibrary>$(MSBuildThisFileDirectory)</TLibrary>
+    </PropertyGroup>
+
+    <!-- WIN32-DEBUG -->
+    <PropertyGroup Condition="'$(Platform.ToLower())' == 'win32' And $(Configuration.ToLower().IndexOf('release')) == -1 ">
+        <TLLIBPATH>$(TLibrary)Lib\Win32\Debug</TLLIBPATH>
+        <TLDLLPATH>$(TLibrary)Bin\Win32\Debug</TLDLLPATH>
+    </PropertyGroup>
+    <!-- WIN32-RELEASE -->
+    <PropertyGroup Condition="'$(Platform.ToLower())' == 'win32' And $(Configuration.ToLower().IndexOf('release')) &gt; -1 ">
+        <TLLIBPATH>$(TLibrary)Lib\Win32\Release</TLLIBPATH>
+        <TLDLLPATH>$(TLibrary)Bin\Win32\Release</TLDLLPATH>
+    </PropertyGroup>
+    <!-- X64-DEBUG -->
+    <PropertyGroup Condition="'$(Platform.ToLower())' == 'x64' And $(Configuration.ToLower().IndexOf('release')) == -1 ">
+        <TLLIBPATH>$(TLibrary)Lib\x64\Debug</TLLIBPATH>
+        <TLDLLPATH>$(TLibrary)Bin\x64\Debug</TLDLLPATH>
+    </PropertyGroup>
+    <!-- X64-RELEASE -->
+    <PropertyGroup Condition="'$(Platform.ToLower())' == 'x64' And $(Configuration.ToLower().IndexOf('release')) &gt; -1 ">
+        <TLLIBPATH>$(TLibrary)Lib\x64\Release</TLLIBPATH>
+        <TLDLLPATH>$(TLibrary)Bin\x64\Release</TLDLLPATH>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <TLINCPATH>$(TLibrary)include</TLINCPATH>
+    </PropertyGroup>
+   
+    <PropertyGroup>
+        <userBinaryPaths>$(TLDLLPATH)</userBinaryPaths>
+        <userLibrarys>$(TLLIBPATH)\*.lib</userLibrarys>
+        <userIncludePath>$(TLINCPATH)</userIncludePath>
+    </PropertyGroup>
+    <!-- 后续内容为统一配置,添加头文件、库依赖以及复制依赖文件等动作 -->
+    <ItemDefinitionGroup>
+        <Link>
+            <AdditionalDependencies>$(userLibrarys);%(AdditionalDependencies)</AdditionalDependencies>
+        </Link>
+        <ClCompile>
+            <AdditionalIncludeDirectories>$(userIncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        </ClCompile>
+        <ResourceCompile>
+            <AdditionalIncludeDirectories>$(userIncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        </ResourceCompile>
+    </ItemDefinitionGroup>    
+    
+    <Target Name="AppLocalFrom_pkgUser" AfterTargets="CopyFilesToOutputDirectory;AfterBuild" BeforeTargets="CopyLocalFilesOutputGroup;RegisterOutput" Condition="'$(pkgUserEnabled)' == 'true'" >
+        <WriteLinesToFile
+        File="$(TLogLocation)$(ProjectName).write.1u.tlog"
+        Lines="^$(TargetPath);$([System.IO.Path]::Combine($(ProjectDir),$(IntDir)))vcpkg.applocal.log" Encoding="Unicode"/>
+        <Exec Condition="'$(pkgUserEnabled)' == 'true'"
+        Command="powershell.exe -ExecutionPolicy Bypass -noprofile -File %22$(MSBuildThisFileDirectory)pkgUser.ps1%22 %22$(TargetPath)%22 %22$(userBinaryPaths)%22 %22$(TLogLocation)$(ProjectName).write.1u.tlog%22 %22$(IntDir)pkgUser.applocal.log%22"
+        StandardOutputImportance="Normal">
+        </Exec>
+        <ReadLinesFromFile File="$(IntDir)pkgUser.applocal.log">
+            <Output TaskParameter="Lines" ItemName="pkgUserAppLocalDLLs" />
+        </ReadLinesFromFile>
+        <Message Text="@(pkgUserAppLocalDLLs,'%0A')" Importance="Normal" />
+        <ItemGroup>
+            <ReferenceCopyLocalPaths Include="@(pkgUserAppLocalDLLs)" />
+        </ItemGroup>
+    </Target>
+</Project>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project  ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+    <!-- 该文件位于.sln同级目录,需要将pkgUserRootPath指定到pkgUser内容目录 -->
+        <pkgUserRootPath Condition="'$(pkgUserRootPath)' == ''">$(MSBuildThisFileDirectory)\pkgUser</pkgUserRootPath>
+    </PropertyGroup>
+    <Import  Condition="'$(pkgUserRootPath)' != '' and Exists('$(pkgUserRootPath).targets')" Project="$(pkgUserRootPath).targets"/>
+<Target Name="Generate By pkgUser" AfterTargets="Build">
+    <Message Text="******  liff.engineer@gmail.com ******" Importance="high" />
+    <Message Text="        _         _   _               " Importance="high" />
+    <Message Text="       | |       | | | |              " Importance="high" />
+    <Message Text="  _ __ | | ____ _| | | |___  ___ _ __ " Importance="high" />
+    <Message Text=" | '_ \| |/ / _` | | | / __|/ _ \ '__|" Importance="high" />
+    <Message Text=" | |_) |   ( (_| | |_| \__ \  __/ |   " Importance="high" />
+    <Message Text=" | .__/|_|\_\__, |\___/|___/\___|_|   " Importance="high" />
+    <Message Text=" | |         __/ |                    " Importance="high" />
+    <Message Text=" |_|        |___/                     " Importance="high" />    
+</Target>
+</Project>
